@@ -12,25 +12,31 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:       #020617;
-      --bg2:      #06090f;
-      --surface:  #0d1117;
-      --surface2: #0f1623;
-      --border:   rgba(30,39,64,0.7);
+      --bg:       #05080f;
+      --bg2:      #070c16;
+      --surface:  #0c1220;
+      --surface2: #0e1628;
+      --border:   rgba(30,50,90,0.6);
       --blue:     #3b82f6;
       --indigo:   #6366f1;
       --cyan:     #06b6d4;
       --green:    #10b981;
-      --text:     #e2e8f2;
-      --muted:    #64748b;
-      --muted2:   #3d4f6b;
+      --red:      #c0392b;
+      --text:     #e8edf5;
+      --muted:    #5a7399;
+      --muted2:   #334d70;
     }
 
     html { scroll-behavior: smooth; }
 
     body {
       font-family: 'Inter', sans-serif;
-      background: var(--bg);
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse 120% 60% at 70% 0%, rgba(20,40,100,0.45) 0%, transparent 60%),
+        radial-gradient(ellipse 80% 50% at 0% 100%, rgba(10,30,70,0.35) 0%, transparent 55%),
+        radial-gradient(circle, rgba(59,130,246,0.045) 1px, transparent 1px);
+      background-size: auto, auto, 38px 38px;
       color: var(--text);
       overflow-x: hidden;
       line-height: 1.6;
@@ -130,17 +136,45 @@
       padding: 100px 0 80px;
       position: relative; overflow: hidden;
     }
-    .hero-bg { position: absolute; inset: 0; pointer-events: none; }
+    .hero .container { display: flex; align-items: center; gap: 60px; }
+    .hero-content { flex: 1; min-width: 0; }
+    .hero-visual { flex: 0 0 420px; display: flex; align-items: center; justify-content: center; }
+    @media (max-width: 900px) { .hero-visual { display: none; } }
+
+    .hero-bg { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
     .hero-bg-glow1 {
-      position: absolute; width: 900px; height: 900px;
-      background: radial-gradient(ellipse, rgba(59,130,246,0.07) 0%, transparent 70%);
-      top: -250px; left: -250px;
+      position: absolute; width: 1100px; height: 1100px;
+      background: radial-gradient(ellipse, rgba(30,80,200,0.18) 0%, rgba(59,130,246,0.06) 35%, transparent 65%);
+      top: -400px; left: -300px;
     }
     .hero-bg-glow2 {
-      position: absolute; width: 700px; height: 700px;
-      background: radial-gradient(ellipse, rgba(99,102,241,0.06) 0%, transparent 70%);
-      bottom: -150px; right: -150px;
+      position: absolute; width: 800px; height: 800px;
+      background: radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 65%);
+      bottom: -200px; right: -100px;
     }
+    .hero-bg-beam {
+      position: absolute;
+      width: 2px; height: 180%;
+      background: linear-gradient(to bottom, transparent, rgba(59,130,246,0.12) 30%, rgba(99,102,241,0.08) 70%, transparent);
+      top: -40%; left: 38%;
+      transform: rotate(-25deg);
+      transform-origin: top center;
+    }
+    .hero-bg-beam2 {
+      position: absolute;
+      width: 1px; height: 160%;
+      background: linear-gradient(to bottom, transparent, rgba(59,130,246,0.07) 40%, transparent);
+      top: -30%; left: 55%;
+      transform: rotate(-25deg);
+    }
+    /* Route-map decoration */
+    .route-map { width: 380px; height: 380px; opacity: 0.75; }
+    @keyframes routePulse { 0%,100%{ opacity:0.5; r:4; } 50%{ opacity:1; r:6; } }
+    @keyframes routePulse2 { 0%,100%{ opacity:0.3; r:3; } 50%{ opacity:0.8; r:5; } }
+    @keyframes dash { to { stroke-dashoffset: -200; } }
+    .node-main { animation: routePulse 2.5s ease-in-out infinite; }
+    .node-sec  { animation: routePulse2 3s ease-in-out infinite; }
+    .route-line { animation: dash 8s linear infinite; }
     .hero-badge {
       display: inline-flex; align-items: center; gap: 8px;
       background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25);
@@ -213,7 +247,13 @@
     .hero-stat-lbl { font-size: 10px; color: var(--muted2); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.07em; }
 
     /* ── SECTION ── */
-    .section { padding: 96px 0; }
+    .section { padding: 96px 0; position: relative; }
+    .section:nth-child(even)::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent, rgba(10,20,50,0.3) 50%, transparent);
+      pointer-events: none;
+    }
     .section-tag {
       display: inline-flex; align-items: center; gap: 6px;
       font-family: 'JetBrains Mono', monospace;
@@ -640,8 +680,11 @@
   <div class="hero-bg">
     <div class="hero-bg-glow1"></div>
     <div class="hero-bg-glow2"></div>
+    <div class="hero-bg-beam"></div>
+    <div class="hero-bg-beam2"></div>
   </div>
   <div class="container">
+    <div class="hero-content">
     <div class="hero-badge fade-up">
       <div class="hero-badge-dot"></div>
       Servicio activo · Badajoz y Cáceres
@@ -685,6 +728,67 @@
         <div class="hero-stat-lbl">tipos de envío</div>
       </div>
     </div>
+    </div><!-- /hero-content -->
+
+    <!-- Hero visual: route-map decoration -->
+    <div class="hero-visual fade-up delay-3">
+      <svg class="route-map" viewBox="0 0 380 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Background circle -->
+        <circle cx="190" cy="190" r="180" fill="rgba(15,30,70,0.5)" stroke="rgba(59,130,246,0.12)" stroke-width="1"/>
+        <circle cx="190" cy="190" r="140" fill="none" stroke="rgba(59,130,246,0.07)" stroke-width="1" stroke-dasharray="4 8"/>
+        <circle cx="190" cy="190" r="100" fill="none" stroke="rgba(99,102,241,0.06)" stroke-width="1" stroke-dasharray="2 10"/>
+
+        <!-- Route lines -->
+        <line x1="190" y1="50"  x2="310" y2="130" stroke="rgba(59,130,246,0.25)" stroke-width="1.5" stroke-dasharray="8 6" class="route-line"/>
+        <line x1="190" y1="50"  x2="80"  y2="140" stroke="rgba(59,130,246,0.2)"  stroke-width="1.5" stroke-dasharray="8 6" class="route-line"/>
+        <line x1="80"  y1="140" x2="60"  y2="260" stroke="rgba(99,102,241,0.2)"  stroke-width="1.5" stroke-dasharray="6 8" class="route-line"/>
+        <line x1="310" y1="130" x2="320" y2="250" stroke="rgba(99,102,241,0.2)"  stroke-width="1.5" stroke-dasharray="6 8" class="route-line"/>
+        <line x1="60"  y1="260" x2="190" y2="330" stroke="rgba(59,130,246,0.25)" stroke-width="1.5" stroke-dasharray="8 6" class="route-line"/>
+        <line x1="320" y1="250" x2="190" y2="330" stroke="rgba(59,130,246,0.25)" stroke-width="1.5" stroke-dasharray="8 6" class="route-line"/>
+        <line x1="190" y1="50"  x2="190" y2="330" stroke="rgba(59,130,246,0.1)"  stroke-width="1"   stroke-dasharray="4 10" class="route-line"/>
+        <line x1="80"  y1="140" x2="310" y2="130" stroke="rgba(99,102,241,0.15)" stroke-width="1"   stroke-dasharray="4 10" class="route-line"/>
+        <line x1="60"  y1="260" x2="320" y2="250" stroke="rgba(99,102,241,0.15)" stroke-width="1"   stroke-dasharray="4 10" class="route-line"/>
+        <!-- Cross lines -->
+        <line x1="80"  y1="140" x2="190" y2="190" stroke="rgba(59,130,246,0.18)" stroke-width="1" class="route-line"/>
+        <line x1="310" y1="130" x2="190" y2="190" stroke="rgba(59,130,246,0.18)" stroke-width="1" class="route-line"/>
+        <line x1="60"  y1="260" x2="190" y2="190" stroke="rgba(99,102,241,0.15)" stroke-width="1" class="route-line"/>
+        <line x1="320" y1="250" x2="190" y2="190" stroke="rgba(99,102,241,0.15)" stroke-width="1" class="route-line"/>
+        <line x1="190" y1="330" x2="190" y2="190" stroke="rgba(59,130,246,0.15)" stroke-width="1" class="route-line"/>
+
+        <!-- Secondary nodes -->
+        <circle cx="190" cy="50"  r="5" fill="#3b82f6" class="node-sec" style="animation-delay:0.3s"/>
+        <circle cx="80"  cy="140" r="4" fill="#6366f1" class="node-sec" style="animation-delay:0.8s"/>
+        <circle cx="310" cy="130" r="4" fill="#6366f1" class="node-sec" style="animation-delay:1.2s"/>
+        <circle cx="60"  cy="260" r="4" fill="#3b82f6" class="node-sec" style="animation-delay:0.5s"/>
+        <circle cx="320" cy="250" r="4" fill="#3b82f6" class="node-sec" style="animation-delay:1.5s"/>
+        <circle cx="190" cy="330" r="5" fill="#6366f1" class="node-sec" style="animation-delay:0.9s"/>
+
+        <!-- Node halos -->
+        <circle cx="190" cy="190" r="22" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
+        <circle cx="190" cy="190" r="14" fill="rgba(59,130,246,0.15)" stroke="rgba(59,130,246,0.35)" stroke-width="1"/>
+        <!-- Central hub -->
+        <circle cx="190" cy="190" r="8" fill="#3b82f6" class="node-main"/>
+        <text x="190" y="194" text-anchor="middle" fill="white" font-size="7" font-weight="700" font-family="'JetBrains Mono',monospace">HUB</text>
+
+        <!-- Labels -->
+        <text x="190" y="40"  text-anchor="middle" fill="rgba(148,197,253,0.7)" font-size="9" font-family="'JetBrains Mono',monospace">BADAJOZ</text>
+        <text x="55"  y="132" text-anchor="end"    fill="rgba(148,197,253,0.6)" font-size="8" font-family="'JetBrains Mono',monospace">CÁCERES</text>
+        <text x="320" y="122" text-anchor="start"  fill="rgba(148,197,253,0.6)" font-size="8" font-family="'JetBrains Mono',monospace">MÉRIDA</text>
+        <text x="40"  y="272" text-anchor="end"    fill="rgba(148,197,253,0.55)" font-size="8" font-family="'JetBrains Mono',monospace">ZAFRA</text>
+        <text x="335" y="262" text-anchor="start"  fill="rgba(148,197,253,0.55)" font-size="8" font-family="'JetBrains Mono',monospace">PLASENCIA</text>
+        <text x="190" y="348" text-anchor="middle" fill="rgba(148,197,253,0.6)" font-size="8" font-family="'JetBrains Mono',monospace">ALMENDRALEJO</text>
+
+        <!-- Glow overlay -->
+        <circle cx="190" cy="190" r="180" fill="url(#mapGlow)" opacity="0.4"/>
+        <defs>
+          <radialGradient id="mapGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="#3b82f6" stop-opacity="0.08"/>
+            <stop offset="100%" stop-color="#060d1a" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+      </svg>
+    </div>
+
   </div>
 </section>
 
