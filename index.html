@@ -883,12 +883,26 @@
       <p class="section-sub" style="margin:0 auto">Rellena el formulario y tu solicitud llega directamente a nuestro equipo de tráfico. Solo operamos en <strong style="color:var(--text)">Extremadura</strong> (Badajoz 06xxx · Cáceres 10xxx).</p>
     </div>
 
-    <div class="envio-success" id="envio-success">
-      <div class="success-icon">✅</div>
-      <div class="success-title">¡Solicitud recibida!</div>
-      <div class="success-ref" id="success-ref">—</div>
-      <p class="success-msg">Tu solicitud ha llegado a nuestro equipo de tráfico. Te contactaremos en breve para confirmar los detalles y coordinar la recogida.</p>
+    <!-- Estado: pago confirmado (retorno desde Stripe) -->
+    <div class="envio-success" id="payment-success" style="display:none">
+      <div class="success-icon">🎉</div>
+      <div class="success-title" style="color:var(--green)">¡Pago confirmado!</div>
+      <div class="success-ref" id="payment-success-ref">—</div>
+      <p class="success-msg">Tu envío está registrado y el pago procesado correctamente. El equipo de Mangrove Logistics se pondrá en contacto contigo para coordinar la recogida.</p>
       <button type="button" onclick="resetEnvioForm()" class="btn-secondary" style="margin-top:28px;border:none;cursor:pointer;font-family:inherit">Solicitar otro envío</button>
+    </div>
+
+    <!-- Estado: pedido registrado, pendiente de pago -->
+    <div class="envio-success" id="envio-success">
+      <div class="success-icon">📦</div>
+      <div class="success-title">¡Solicitud registrada!</div>
+      <div class="success-ref" id="success-ref">—</div>
+      <p class="success-msg" style="margin-bottom:28px">Tu envío ha quedado registrado en nuestro sistema. Completa el pago ahora para confirmar la reserva.</p>
+      <button type="button" id="pay-btn" onclick="payNow()" class="btn-primary" style="border:none;cursor:pointer;font-size:16px;padding:16px 36px">
+        💳 Pagar ahora — <span id="pay-amount">—</span> €
+      </button>
+      <p style="font-size:12px;color:var(--muted2);margin-top:12px">Pago seguro con Stripe · Visa, Mastercard, AMEX</p>
+      <button type="button" onclick="resetEnvioForm()" class="btn-secondary" style="margin-top:16px;border:none;cursor:pointer;font-family:inherit;font-size:13px;padding:10px 20px">Solicitar otro envío</button>
     </div>
 
     <form class="form-card reveal" id="envio-form" onsubmit="submitEnvio(event)" novalidate>
@@ -1542,8 +1556,11 @@ async function submitEnvio(e) {
     const d = await r.json();
 
     if (d.success) {
+      _lastReference = d.reference;
+      _lastAmount    = d.quote?.total ?? null;
       document.getElementById('envio-form').style.display = 'none';
-      document.getElementById('success-ref').textContent = d.reference;
+      document.getElementById('success-ref').textContent  = d.reference;
+      document.getElementById('pay-amount').textContent   = _lastAmount ? _lastAmount.toFixed(2) : '—';
       const suc = document.getElementById('envio-success');
       suc.style.display = 'block';
       suc.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1560,6 +1577,59 @@ async function submitEnvio(e) {
     btn.textContent = 'Solicitar envío →';
   }
 }
+
+/* ── Pago con Stripe ── */
+let _lastReference = null;
+let _lastAmount    = null;
+
+async function payNow() {
+  if (!_lastReference || !_lastAmount) return;
+  const btn = document.getElementById('pay-btn');
+  btn.disabled = true;
+  btn.textContent = 'Redirigiendo a pago seguro…';
+  try {
+    const r = await fetch(`${_API}/payment-session`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ reference: _lastReference, amount: _lastAmount }),
+    });
+    const d = await r.json();
+    if (d.success && d.url) {
+      window.location.href = d.url;
+    } else {
+      alert(d.error || 'Error al iniciar el pago. Inténtalo de nuevo.');
+      btn.disabled = false;
+      btn.innerHTML = '💳 Pagar ahora — ' + _lastAmount.toFixed(2) + ' €';
+    }
+  } catch {
+    alert('Error de conexión. Por favor, inténtalo de nuevo.');
+    btn.disabled = false;
+    btn.innerHTML = '💳 Pagar ahora — ' + _lastAmount.toFixed(2) + ' €';
+  }
+}
+
+/* ── Gestión retorno Stripe ── */
+(function checkPaymentReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const payment = params.get('payment');
+  const ref     = params.get('ref');
+  if (!payment) return;
+  // Limpiar URL
+  window.history.replaceState({}, '', window.location.pathname);
+  if (payment === 'success' && ref) {
+    document.getElementById('payment-success-ref').textContent = ref;
+    const suc = document.getElementById('payment-success');
+    suc.style.display = 'block';
+    setTimeout(() => suc.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+  } else if (payment === 'cancelled') {
+    // Mostrar mensaje no intrusivo
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:72px;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid rgba(245,158,11,0.4);color:#fbbf24;padding:12px 24px;border-radius:10px;font-size:14px;z-index:999;';
+    banner.textContent = 'Pago cancelado. Tu solicitud sigue guardada — puedes pagar cuando quieras.';
+    document.body.appendChild(banner);
+    setTimeout(() => banner.remove(), 6000);
+  }
+})();
 
 /* ── Reset formulario ── */
 function resetEnvioForm() {
